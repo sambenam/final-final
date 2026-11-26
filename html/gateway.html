@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>درگاه پرداخت الکترونیک امن | بنام آکادمی</title>
+  <link rel="icon" type="image/png" href="../images/benam-academy-icon.png" />
+  <meta name="description" content="صفحه پرداخت امن سفارش." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="درگاه پرداخت الکترونیک امن | بنام آکادمی" />
+  <meta property="og:description" content="صفحه پرداخت امن سفارش." />
+  <meta property="og:image" content="../images/benam-academy-logo.png" />
+  <meta property="og:locale" content="fa_IR" />
+  <link rel="stylesheet" href="../styles/pages/gateway.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha384-nRgPTkuX86pH8yjPJUAFuASXQSSl2/bBUiNV47vSYpKFxHJhbcrGnmlYpYJMeD7a" crossorigin="anonymous"
+    referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="../styles/pages/site-theme.css" />
+</head>
+
+<body class="site-page">
+  <div class="gateway-main-wrapper">
+    <!-- Top Security & Timer Bar -->
+    <header class="gateway-topbar">
+      <div class="secure-badge">
+        <i class="fas fa-lock"></i>
+        <span>انتقال امن به درگاه بانکی</span>
+      </div>
+
+    </header>
+
+    <!-- Two Column Gateway Card -->
+    <div class="gateway-desktop-card">
+      <section class="merchant-column" aria-labelledby="paymentSummaryTitle">
+        <div class="merchant-brand">
+          <div class="brand-icon"><i class="fas fa-lock"></i></div>
+          <h3 id="paymentSummaryTitle">پرداخت امن سفارش</h3>
+        </div>
+        <p>برای حفظ امنیت اطلاعات بانکی، اطلاعات کارت را فقط در صفحه رسمی درگاه پرداخت وارد کنید.</p>
+        <div class="merchant-amount-box">
+          <span>مبلغ سفارش:</span>
+          <div class="amount-value" id="gatewayAmount">در انتظار دریافت اطلاعات سفارش</div>
+        </div>
+      </section>
+
+      <section class="form-column" aria-labelledby="gatewayHeading">
+        <div class="form-column-header">
+          <h2 id="gatewayHeading"><i class="fas fa-shield-halved"></i> انتقال به درگاه بانکی</h2>
+          <p>پس از ایجاد سفارش، به درگاه پرداخت معتبر منتقل خواهید شد.</p>
+        </div>
+        <form id="desktopPaymentForm">
+          <p class="gateway-message" role="status" aria-live="polite">اطلاعات سفارش در حال بررسی است.</p>
+          <div class="gateway-action-buttons">
+            <a href="checkout.html" class="btn-submit-gateway">بازگشت به تسویه‌حساب</a>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script src="../scripts/config.js"></script>
+    <script src="../scripts/api.js"></script>
+  <script src="../scripts/app-shell.js"></script>
+  <script src="../scripts/gateway.js"></script>
+</body>
+
+</html>
