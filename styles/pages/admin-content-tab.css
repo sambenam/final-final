@@ -1,13 +1,9 @@
 /* ============================================================================
    تب محتوای سایت: ردیف‌های کارتی و ویرایشگر بلوک
-
-   The site-content tab. It used to render twenty-seven tables with a hundred
- * and sixty-two repeated column headings; this is the card-row layout that
- * replaced them, plus the block editor and the collapsible groups.
-
-   Part of the admin stylesheet, split out of a single 2,764-line file.
-   Load order is set in html/admin.html and matters: see admin-base.css first
-   and admin-msg-actions.css last.
+   Card-row layout that replaced the old 27 tables with repeated headings,
+   plus the block editor and the collapsible groups. Part of the admin
+   stylesheet (split out of one 2,764-line file); load order is set in
+   html/admin.html: admin-base.css first, admin-msg-actions.css last.
    ========================================================================== */
 
 /* Site content editor */

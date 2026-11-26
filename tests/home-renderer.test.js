@@ -39,6 +39,12 @@ function test(name, condition) {
 window.eval("const siteData = " + JSON.stringify(data) + ";\n" + renderer);
 const document = window.document;
 
+// home-renderer.js is now an async IIFE (it can consult appApi.content.list
+// before falling back to the bundled preview data), so rendering completes in
+// microtasks after eval returns. Wait one macrotask before asserting.
+async function run() {
+await new Promise((resolve) => setTimeout(resolve, 50));
+
 for (const selector of [
   ".popular-courses_item",
   ".new-courses_item",
@@ -59,3 +65,6 @@ test("article titles remain inside their original heading", document.querySelect
 dom.window.close();
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
+}
+
+run();

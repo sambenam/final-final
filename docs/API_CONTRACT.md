@@ -75,6 +75,20 @@
 
 **اعتبارسنجی موردانتظار در `/auth/register`:** نام، ایمیل و رمز الزامی — رمز حداقل ۶ کاراکتر — ایمیل تکراری باید `409` برگرداند.
 
+### تأیید ایمیل (اختیاری — صفحهٔ آماده)
+
+صفحهٔ `html/verification.html` برای جریان «کد ۶ رقمی به ایمیل» از پیش ساخته شده ولی **در جریان پیش‌فرض ثبت‌نام سیم‌کشی نشده است**، چون قرارداد فعلی `/auth/register` بلافاصله `{ token, user }` برمی‌گرداند. اگر بک‌اند تأیید ایمیل بخواهد:
+
+| متد | مسیر | بدنه | پاسخ |
+| --- | --- | --- | --- |
+| `POST` | `/api/auth/verify-code` | `{ code, email?, challengeId? }` | `{ success, message? }` |
+| `POST` | `/api/auth/resend-code` | `{ email?, challengeId? }` | `{ success, retryAfter? }` |
+
+- آدرس این دو مسیر و آدرس‌های هدایت، از data attributeهای تگ `<body>` همان صفحه قابل‌تغییرند (`data-verify-endpoint`، `data-resend-endpoint`، `data-success-url`، `data-login-url`).
+- صفحه ایمیل/شناسهٔ چالش را از query string (`?email=...&challengeId=...`) یا sessionStorage (`verificationEmail`، `verificationChallengeId`) می‌خواند.
+- برای فعال‌سازی: پاسخ `/auth/register` به‌جای توکن، نیاز به تأیید را اعلام کند و فرانت پس از ثبت‌نام به `verification.html?email=...` هدایت شود (یک تغییر کوچک در `scripts/login-signup.js`).
+- `meta[name="csrf-token"]` در head صفحه برای جای‌گذاری توکن CSRF سمت سرور آماده است.
+
 ### پروفایل
 
 | متد     | مسیر                | بدنه                                     | پاسخ                    |

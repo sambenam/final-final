@@ -10,7 +10,7 @@
 const { JSDOM } = require("jsdom");
 const fs = require("fs");
 const path = require("path");
-const { pageStyles } = require("./helpers/page-scripts.js");
+const { pageStyles, pageScripts, readScripts } = require("./helpers/page-scripts.js");
 const ROOT = path.join(__dirname, "..");
 
 let p = 0,
@@ -103,6 +103,7 @@ section("۲. عنوان ارتفاع ثابت دو خط دارد");
 }
 
 /* ------------------------------------------------------------------- 3 */
+(async () => {
 section("۳. در مرورگر واقعی: عنوان کوتاه و بلند یک شکل می‌شوند");
 {
   const html = fs.readFileSync(path.join(ROOT, "html/index.html"), "utf8");
@@ -138,6 +139,17 @@ section("۳. در مرورگر واقعی: عنوان کوتاه و بلند ی�
     style.textContent = fs.readFileSync(path.join(ROOT, "styles", rel), "utf8");
     d.head.appendChild(style);
   });
+
+  // Article cards are rendered by home-renderer.js (no longer static HTML),
+  // so the page scripts must run before the cards can be measured.
+  w.eval(
+    readScripts(
+      pageScripts("index.html", { exclude: ["ai-widget.js", "up-btn.js"] }),
+    ).join("\n;\n"),
+  );
+  d.dispatchEvent(new w.Event("DOMContentLoaded", { bubbles: true }));
+  // the renderer finishes a tick later (async pipeline)
+  await new Promise((resolve) => setTimeout(resolve, 50));
 
   // Five characters beside fifty-one - the case that broke.
   const probes = [
@@ -180,6 +192,7 @@ section("۳. در مرورگر واقعی: عنوان کوتاه و بلند ی�
     );
   });
 }
+})().then(() => {
 
 /* ------------------------------------------------------------------- 4 */
 section("۴. تصویر کارت‌ها دست‌نخورده مانده");
@@ -219,3 +232,4 @@ section("۵. فاصله‌ی انتهای هوم و جایگاه اخبار");
 
 console.log(`\n${p} تست موفق، ${f} ناموفق`);
 process.exit(f ? 1 : 0);
+});

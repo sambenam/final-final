@@ -451,6 +451,7 @@ section("۸. ذخیره آیتم — فیلد homeVisible");
 }
 
 /* ==========================================  the home page actually obeys */
+const section9 = (async () => {
 section("۹. صفحه اصلی واقعاً قانون را رعایت می‌کند");
 {
   // Five custom articles, only one marked for the home page. The section
@@ -535,6 +536,10 @@ section("۹. صفحه اصلی واقعاً قانون را رعایت می‌ک
   }
   w.document.dispatchEvent(new w.Event("DOMContentLoaded", { bubbles: true }));
 
+  // home-renderer.js renders asynchronously (it can consult the content API
+  // before using the bundled preview data); give it a tick to finish.
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
   // Match on the LINK TARGET, not on the visible text. An earlier version of
   // this test searched the section's textContent for the title "الف" and
   // failed: that letter appears inside ordinary Persian words, so the check
@@ -576,6 +581,9 @@ section("۹. صفحه اصلی واقعاً قانون را رعایت می‌ک
     linkedIds.slice(0, 3).join(","),
   );
 }
+})();
+
+section9.then(() => {
 
 /* ================================================================  style */
 section("۱۰. ظاهر");
@@ -718,3 +726,4 @@ section("۱۱. چیدمان پنجره — عریض و کوتاه");
 
 console.log(`\n${p} تست موفق، ${f} ناموفق`);
 process.exit(f ? 1 : 0);
+});

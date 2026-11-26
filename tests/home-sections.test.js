@@ -135,7 +135,12 @@ function bootHome(stored, extraCategory) {
   );
   w.eval(src.join("\n;\n"));
   w.document.dispatchEvent(new w.Event("DOMContentLoaded", { bubbles: true }));
-  return { w, doc: w.document };
+  // home-renderer.js is an async IIFE and calls renderCustomHomeSections()
+  // at its end, after awaiting the (absent) content API — so custom sections
+  // appear a tick after eval. Wait for that before asserting.
+  return new Promise((resolve) =>
+    setTimeout(() => resolve({ w, doc: w.document }), 50),
+  );
 }
 
 const sectionOrder = (doc) =>
@@ -220,7 +225,6 @@ const collide = w.__t.makeSectionKey("articles", ["custom_articles"]);
 t("کلید تکراری خودکار عوض می‌شود", collide !== "custom_articles", collide);
 
 // ---------------------------------------------------------------- render
-section("نمایش در صفحه اصلی");
 const SECTION = {
   key: "custom_test",
   title: "سکشن آزمایشی",
@@ -230,7 +234,10 @@ const SECTION = {
   limit: 8,
   showAll: true,
 };
-let home = bootHome([SECTION]);
+
+async function runRenderTests() {
+section("نمایش در صفحه اصلی");
+let home = await bootHome([SECTION]);
 t(
   "سکشن خالی نمایش داده نمی‌شود",
   !home.doc.querySelector("[data-custom-section]"),
@@ -253,7 +260,7 @@ const ITEMS = [
     excerpt: "ب",
   },
 ];
-home = bootHome([SECTION], ITEMS);
+home = await bootHome([SECTION], ITEMS);
 const custom = home.doc.querySelector("[data-custom-section]");
 t("سکشن رندر شد", !!custom);
 t("عنوان درست", custom && custom.textContent.includes("سکشن آزمایشی"));
@@ -278,7 +285,7 @@ t("هیرو همچنان اول است", order[0] === "hero-section");
 t("خبرهای سایت همچنان دوم است", order[1] === "home-news");
 
 section("لنگر دیگر، جای دیگر");
-home = bootHome([{ ...SECTION, after: "exams" }], ITEMS);
+home = await bootHome([{ ...SECTION, after: "exams" }], ITEMS);
 const order2 = sectionOrder(home.doc);
 t(
   "لنگر قدیمی آزمون‌ها بعد از home-news می‌نشیند",
@@ -287,7 +294,7 @@ t(
 );
 
 section("دو سکشن روی یک لنگر");
-home = bootHome(
+home = await bootHome(
   [
     { ...SECTION, key: "custom_a", title: "الف" },
     { ...SECTION, key: "custom_b", title: "ب" },
@@ -316,7 +323,10 @@ t(
   home.doc.querySelectorAll('[data-custom-section="custom_a"]').length === 1,
 );
 
+}
+
 // ---------------------------------------------------------------- delete
+async function runDeleteTests() {
 section("حذف سکشن، هیچ ردی باقی نمی‌گذارد");
 ({ w, doc } = bootAdmin([SECTION]));
 t("در فهرست هست", w.__t.loadHomeSections().length === 1);
@@ -391,7 +401,13 @@ w.__t.deleteHomeSection("custom_test");
 t("سکشن سر جایش ماند", w.__t.loadHomeSections().length === 1);
 t("دسته هم دست‌نخورده", !!w.__t.siteData["custom_test"]);
 
-console.log("\n" + "=".repeat(52));
-console.log(`  ${p} passed, ${f} failed`);
-console.log("=".repeat(52));
-process.exit(f ? 1 : 0);
+}
+
+(async () => {
+  await runRenderTests();
+  await runDeleteTests();
+  console.log("\n" + "=".repeat(52));
+  console.log(`  ${p} passed, ${f} failed`);
+  console.log("=".repeat(52));
+  process.exit(f ? 1 : 0);
+})();

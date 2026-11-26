@@ -111,6 +111,21 @@ const countData = (w) =>
     0,
   );
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// The content table defers closed groups: their rows render on the first
+// `toggle`. Tests that need every row in the DOM open all groups first —
+// the same thing an operator does by clicking each group header.
+const openAllGroups = (w, doc) => {
+  [...doc.querySelectorAll("details.content-group")].forEach((d) => {
+    if (!d.open) {
+      d.open = true;
+      d.dispatchEvent(new w.Event("toggle"));
+    }
+  });
+};
+
+(async () => {
 let { w, doc, store } = boot();
 const box = doc.getElementById("groupedContentContainer");
 section("رندر تنبل و استفادهٔ دوباره از فهرست");
@@ -129,6 +144,11 @@ t("بازگشت به محتوا رندر گران را تکرار نمی‌کن�
 
 // ------------------------------------------------------------ nothing lost
 section("همه آیتم‌ها هنوز نمایش داده می‌شوند");
+const groupsAll = [...box.querySelectorAll(".content-group")];
+const initialOpenStates = groupsAll.map((g) => g.open);
+const closedBodyBeforeOpen =
+  groupsAll[1].querySelectorAll(".content-item").length;
+openAllGroups(w, doc);
 const shown = box.querySelectorAll(".content-item").length;
 const inData = countData(w);
 t(
@@ -188,16 +208,23 @@ t("خط مشکی پررنگ نمانده", !box.innerHTML.includes("rgb(0, 0, 0,
 // ------------------------------------------------------------ open state
 section("فقط گروه اول باز است");
 const groups = [...box.querySelectorAll(".content-group")];
-t("گروه اول باز", groups[0].open === true);
-t("گروه دوم بسته", groups[1].open === false);
-t("گروه سوم بسته", groups[2].open === false);
+t("گروه اول باز", initialOpenStates[0] === true);
+t("گروه دوم بسته", initialOpenStates[1] === false);
+t("گروه سوم بسته", initialOpenStates[2] === false);
 t(
   "فقط یکی باز است",
-  groups.filter((g) => g.open).length === 1,
-  String(groups.filter((g) => g.open).length),
+  initialOpenStates.filter(Boolean).length === 1,
+  String(initialOpenStates.filter(Boolean).length),
+);
+// New lazy-render contract: a closed group's rows are NOT in the DOM until
+// the group is opened; opening it must render the full content.
+t(
+  "گروه بسته تا باز شدن رندر نمی‌شود (رندر تنبل)",
+  closedBodyBeforeOpen === 0,
+  String(closedBodyBeforeOpen),
 );
 t(
-  "گروه بسته هم محتوایش رندر شده",
+  "با باز شدن، محتوای گروه بسته کامل رندر شد",
   groups[1].querySelectorAll(".content-item").length > 0,
   String(groups[1].querySelectorAll(".content-item").length),
 );
@@ -337,6 +364,7 @@ const anyItem = Object.entries(w.__t.siteData).find(
 )[1].items[0];
 search.value = anyItem.title.slice(0, 6);
 search.dispatchEvent(new w.Event("input", { bubbles: true }));
+await sleep(220); // the search input is debounced (160ms)
 const results = doc.querySelectorAll("#groupedContentContainer .content-item");
 t("نتیجه پیدا شد", results.length > 0, String(results.length));
 t("جستجوی آیتم‌ها overrideها را یک‌بار می‌خواند", store.__itemContentReads === 1, String(store.__itemContentReads));
@@ -363,6 +391,7 @@ t(
 
 search.value = "regulations-terms";
 search.dispatchEvent(new w.Event("input", { bubbles: true }));
+await sleep(220);
 t(
   "سیاست‌های سایت در جستجوی پنل هم نمایش داده نمی‌شوند",
   doc.getElementById("groupedContentContainer").textContent.includes("پیدا نشد"),
@@ -370,6 +399,7 @@ t(
 
 search.value = "یک عبارت که قطعا وجود ندارد zzz";
 search.dispatchEvent(new w.Event("input", { bubbles: true }));
+await sleep(220);
 t(
   "نتیجه خالی پیام می‌دهد",
   doc
@@ -379,6 +409,8 @@ t(
 
 search.value = "";
 search.dispatchEvent(new w.Event("input", { bubbles: true }));
+await sleep(220);
+openAllGroups(w, doc);
 t(
   "پاک کردن جستجو گروه‌ها را برمی‌گرداند",
   doc.querySelectorAll("#groupedContentContainer .content-group").length >= 4,
@@ -413,6 +445,7 @@ t(
     .getElementById("groupedContentContainer")
     .textContent.includes("هیچ آیتمی در این دسته"),
 );
+openAllGroups(w, doc);
 t(
   "بقیه دسته‌ها سالم ماندند",
   doc.querySelectorAll("#groupedContentContainer .content-item").length ===
@@ -423,6 +456,7 @@ t(
 section("شمارنده بعد از افزودن و حذف به‌روز می‌شود");
 ({ w, doc, store } = boot());
 w.__t.renderContentTable();
+openAllGroups(w, doc);
 
 const groupStats = (title) => {
   const g = [...doc.querySelectorAll(".content-group")].find((x) =>
@@ -488,6 +522,7 @@ doc
   .getElementById("addNewItemForm")
   .dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
 
+openAllGroups(w, doc);
 const coursesAfter = groupStats("منوهای هدر: دوره‌ها");
 const begAfter = catCount("beginner");
 t(
@@ -526,6 +561,7 @@ t(
 
 w.__t.deleteContentItem("counter-check-1");
 w.__t.renderContentTable();
+openAllGroups(w, doc);
 const coursesBack = groupStats("منوهای هدر: دوره‌ها");
 t(
   "بعد از حذف شمارندهٔ دوره‌ها برمی‌گردد",
@@ -536,3 +572,4 @@ t("کارت‌های دوره‌ها هم برگشتند", coursesBack.cards ===
 
 console.log(`\n${p} تست موفق، ${f} ناموفق`);
 process.exit(f ? 1 : 0);
+})();

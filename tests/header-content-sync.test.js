@@ -147,18 +147,21 @@ Object.defineProperty(publicWindow, "console", {
 });
 const publicSources = pageScripts("list-page.html").map((file) => fs.readFileSync(path.join(ROOT, "scripts", file), "utf8"));
 publicWindow.eval(publicSources.join("\n;\n"));
-test("public category page resolves the generated header destination", publicWindow.document.getElementById("page-title").textContent === "مالیات تکمیلی");
-test("content added in admin appears on the generated header destination", publicWindow.document.getElementById("posts-list").textContent.includes("راهنمای مالیات تکمیلی"));
 
-const withoutExtraDestination = w.BenamCustomHeaderMenu.read().filter((item) => item.id !== "custom-student-extra");
-w.BenamCustomHeaderMenu.save(withoutExtraDestination);
-test("removing a header link preserves its existing content category", !!w.__testApi.siteData["custom-student-extra"] && w.__testApi.siteData["custom-student-extra"].items.some((item) => item.id === "new-custom-article"));
-const activeGroupsAfterRemoval = w.__testApi.getGroups({ includeCustom: true, includeFallback: false });
-test("removed header destination is no longer offered as an active menu category", !activeGroupsAfterRemoval.some((group) => group.categories.includes("custom-student-extra")));
-
-console.log(`\n${passed} passed, ${failed} failed`);
+// list-page.js now loads asynchronously (it consults appApi.content.list and
+// falls back to the local preview data), so assert after the pipeline settles.
 setTimeout(() => {
+  test("public category page resolves the generated header destination", publicWindow.document.getElementById("page-title").textContent === "مالیات تکمیلی");
+  test("content added in admin appears on the generated header destination", publicWindow.document.getElementById("posts-list").textContent.includes("راهنمای مالیات تکمیلی"));
+
+  const withoutExtraDestination = w.BenamCustomHeaderMenu.read().filter((item) => item.id !== "custom-student-extra");
+  w.BenamCustomHeaderMenu.save(withoutExtraDestination);
+  test("removing a header link preserves its existing content category", !!w.__testApi.siteData["custom-student-extra"] && w.__testApi.siteData["custom-student-extra"].items.some((item) => item.id === "new-custom-article"));
+  const activeGroupsAfterRemoval = w.__testApi.getGroups({ includeCustom: true, includeFallback: false });
+  test("removed header destination is no longer offered as an active menu category", !activeGroupsAfterRemoval.some((group) => group.categories.includes("custom-student-extra")));
+
+  console.log(`\n${passed} passed, ${failed} failed`);
   dom.window.close();
   publicDom.window.close();
+  if (failed) process.exit(1);
 }, 50);
-if (failed) process.exit(1);
